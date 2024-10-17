@@ -1,7 +1,14 @@
 #!/bin/bash
 QUERY="SHOW DATABASES;"
-USER="root"
-PWD="password"
+USER=$1
+PWD=$2
+
+if [ $# < 2 ]
+  then
+    echo "Usage: backup-mariadb.sh <user> <password>"
+    exit 1;
+fi
+
 DATABASES=$(mysql -u $USER --password="$PWD" -e "$QUERY" -N -s)
 BACKUP_DIR="/var/backup/mysql/"
 
@@ -24,4 +31,3 @@ do
         gzip "$BACKUP_DIR""mysqldump_"$db"_$(date +"%Y%m%d").sql"
     fi
 done
-

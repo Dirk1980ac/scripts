@@ -8,7 +8,7 @@ IFS=$'\n'; set -f
 for sourceFile in $(find . -iname "*.$sourceExtension")
 do
     targetFile="${sourceFile%.*}.$targetExtension"
-    ffmpeg -i "$sourceFile" "$targetFile"
+    ffmpeg -y -hwaccel vaapi -i "$sourceFile" "$targetFile"
     if [ "$deleteSourceFile" == "delete" ]; then
         if [ -f "$targetFile" ]; then
             rm "$sourceFile"
