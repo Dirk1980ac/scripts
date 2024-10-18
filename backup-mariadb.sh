@@ -3,7 +3,7 @@ QUERY="SHOW DATABASES;"
 USER=$1
 PWD=$2
 
-if [ $# < 2 ]
+if [ ! $# -eq 2 ]
   then
     echo "Usage: backup-mariadb.sh <user> <password>"
     exit 1;
