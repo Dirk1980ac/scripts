@@ -9,6 +9,8 @@ fi
 # Export GPG passphrase
 SIGN_PASSPHRASE=$1 \
 duplicity backup --verbosity=notice \
+	--full-if-older-than=3M \
+	--volsize=1024 \
 	--name act \
 	--sign-key 82C39B0F4FED68CDFF63F7000EA6FF1FE712FE10 \
 	--encrypt-key 82C39B0F4FED68CDFF63F7000EA6FF1FE712FE10 \
@@ -16,17 +18,20 @@ duplicity backup --verbosity=notice \
 	--include $HOME/Dokumente \
 	--include $HOME/Bilder \
 	--include $HOME/Musik \
-	--include $HOME/.gnupg \
 	--include $HOME/.config \
+	--include $HOME/.gnupg \
 	--include $HOME/Vorlagen \
 	--include $HOME/bin \
 	--include $HOME/.ssh \
 	--include $HOME/.zshrc \
+	--include $HOME/.kodi \
 	--include $HOME/.password-store \
 	--include $HOME/.antigenrc \
 	--include $HOME/.zshrc \
 	--include $HOME/.antigen \
 	--include $HOME/scripts \
+	--include $HOME/rpmbuild/SPECS \
+	--include $HOME/rpmbuild/SOURCES \
 	--exclude '**' \
 	$HOME \
 	file:///net/lexington/dgottschalk/backup/reliant
