@@ -11,17 +11,21 @@
 # Print a hopefully useful help text.
 help() {
 	cat <<EOF
-Usage:
-$0 -i <directory> -o <directory>
+Usage: rpm-crossbuild -i <directory> -o <directory>
 
 Options:
 	-i <directory>		Input directory (mandatory)
 	-o <directory>		Output directory (mandatory)
 	-p <platform>		Target platform (e.g linux/arm64) (mandatory)
-	-h			Show this help
+	-h					Show this help
 EOF
 	exit 1
 }
+
+if [ $# -lt 3 ]; then
+	help
+	exit 1
+fi
 
 # Check command line options
 while getopts "p:i:o:h" flag; do
@@ -38,20 +42,20 @@ while getopts "p:i:o:h" flag; do
 done
 
 # Show help if a mandatory option is missing
-if [ -z "$input" ] || [ -z "$output" ] || [ -z $platform ]; then
+if [[ -z $input  ||  -z $output  ||  -z $platform ]]; then
 	help
-elif [ ! -d "$input" ]; then
+elif [[ ! -d $input ]]; then
 	echo "$input is not a file."
 	exit 1
-elif [ ! -d "$output" ]; then
+elif [[ ! -d $output ]]; then
 	mkdir $output
 fi
 
 # Check if given platform is supported
-#if [[ $platform != "linux/arm64" || $platform != "linux/amd64" ]]; then
-#	echo "Platform $platform is not supported."
-#	exit 1
-#fi
+if [[ $platform != "linux/arm64" && $platform != "linux/amd64" ]]; then
+	echo "Platform $platform is not supported."
+	exit 1
+fi
 
 # Run the contauiner and build the package
 podman run \

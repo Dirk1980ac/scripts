@@ -1,14 +1,13 @@
 #!/bin/sh
 
-if [ $# -eq 0 ]
-  then
-    echo "Usage: backup.sh <password>"
-    exit 1;
+if [ $# -eq 0 ]; then
+	echo "Usage: backup.sh <password>"
+	exit 1
 fi
 
 # Export GPG passphrase
 SIGN_PASSPHRASE=$1 \
-duplicity backup --verbosity=notice \
+	duplicity backup --verbosity=notice \
 	--full-if-older-than=3M \
 	--volsize=1024 \
 	--name act \
