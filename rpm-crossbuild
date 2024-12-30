@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# SPDX-License-Identifier: GPL-2.0
+
+# Rebuild source RPM Packages for the specified platform using the
+# /dirk1980/rpm-crossbuild:latest Podman image.
+# Actually supported by the image are linux/amd64 and linux/arm64.
+
+# Copyright 2024 by Dirk Gottschalk
+
 # Print a hopefully useful help text.
 help() {
 	cat <<EOF
@@ -9,16 +17,18 @@ $0 -i <directory> -o <directory>
 Options:
 	-i <directory>		Input directory (mandatory)
 	-o <directory>		Output directory (mandatory)
+	-p <platform>		Target platform (e.g linux/arm64) (mandatory)
 	-h			Show this help
 EOF
 	exit 1
 }
 
 # Check command line options
-while getopts "i:o:h" flag; do
+while getopts "p:i:o:h" flag; do
 	case $flag in
 	i) input=$OPTARG ;;
 	o) output=$OPTARG ;;
+	p) platform=$OPTARG ;;
 	h) help ;;
 	*)
 		echo 'Unknown option.'
@@ -28,21 +38,28 @@ while getopts "i:o:h" flag; do
 done
 
 # Show help if a mandatory option is missing
-if [ -z "$input" ] || [ -z "$output" ]; then
+if [ -z "$input" ] || [ -z "$output" ] || [ -z $platform ]; then
 	help
 elif [ ! -d "$input" ]; then
 	echo "$input is not a file."
-	exit
+	exit 1
 elif [ ! -d "$output" ]; then
 	mkdir $output
 fi
 
+# Check if given platform is supported
+#if [[ $platform != "linux/arm64" || $platform != "linux/amd64" ]]; then
+#	echo "Platform $platform is not supported."
+#	exit 1
+#fi
+
+# Run the contauiner and build the package
 podman run \
 	--rm \
 	-it \
 	--security-opt label=type:unconfined_t \
 	--pull=newer \
-	--platform linux/arm64 \
+	--platform $platform \
 	-v $input:/input:ro \
 	-v $output:/output \
 	docker.io/dirk1980/rpm-crossbuild:latest
