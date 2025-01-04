@@ -2,10 +2,13 @@ root = true
 
 [*]
 indent_style = tab
-tab_width = 4
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
+indent_size = 4
+shell_variant      = auto
+binary_next_line   = true
+switch_case_indent = true
+space_redirects    = true
+keep_padding       = true
+function_next_line = true
 
 [*.md]
 tab_width = 4
@@ -13,24 +16,3 @@ end_of_line = lf
 charset = utf-8
 indent_style = tab
 trim_trailing_whitespace = false
-
-[Makefile]
-indent_style = tab
-tab_width = 4
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
-
-[*.[ch]]
-indent_style = tab
-tab_width = 8
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true
-
-[{Dockerfile,Containerfile}]
-indent_style = tab
-tab_width = 8
-end_of_line = lf
-charset = utf-8
-trim_trailing_whitespace = true

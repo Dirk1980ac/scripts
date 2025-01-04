@@ -9,15 +9,16 @@
 # Copyright 2024 by Dirk Gottschalk
 
 # Print a hopefully useful help text.
-help() {
-	cat <<EOF
+help()
+{
+	cat << EOF
 Usage: rpm-crossbuild -i <directory> -o <directory>
 
 Options:
-	-i <directory>		Input directory (mandatory)
-	-o <directory>		Output directory (mandatory)
-	-p <platform>		Target platform (e.g linux/arm64) (mandatory)
-	-h					Show this help
+    -i <directory>        Input directory (mandatory)
+    -o <directory         Output directory (mandatory)
+    -p <platform>         Target platform (e.g linux/arm64) (mandatory)
+    -h                    Show this help
 EOF
 	exit 1
 }
@@ -30,19 +31,19 @@ fi
 # Check command line options
 while getopts "p:i:o:h" flag; do
 	case $flag in
-	i) input=$OPTARG ;;
-	o) output=$OPTARG ;;
-	p) platform=$OPTARG ;;
-	h) help ;;
-	*)
-		echo 'Unknown option.'
-		exit 1
-		;;
+		i) input=$OPTARG ;;
+		o) output=$OPTARG ;;
+		p) platform=$OPTARG ;;
+		h) help ;;
+		*)
+			echo 'Unknown option.'
+			exit 1
+			;;
 	esac
 done
 
 # Show help if a mandatory option is missing
-if [[ -z $input  ||  -z $output  ||  -z $platform ]]; then
+if [[ -z $input || -z $output || -z $platform     ]]; then
 	help
 elif [[ ! -d $input ]]; then
 	echo "$input is not a file."

@@ -24,7 +24,7 @@ for db in $DATABASES; do
 	# don't backup template0 database
 	if [ "$db" != "template0" ] && [ "$db" != "information_schema" ]; then
 		mysqldump --skip-lock-tables -u $USER --password=$PWD $db \
-			>"$BACKUP_DIR""mysqldump_"$db"_$(date +"%Y%m%d").sql"
+			> "$BACKUP_DIR""mysqldump_"$db"_$(date +"%Y%m%d").sql"
 		gzip "$BACKUP_DIR""mysqldump_"$db"_$(date +"%Y%m%d").sql"
 	fi
 done
