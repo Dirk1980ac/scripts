@@ -43,7 +43,7 @@ while getopts "p:i:o:h" flag; do
 done
 
 # Show help if a mandatory option is missing
-if [[ -z $input || -z $output || -z $platform     ]]; then
+if [[ -z $input || -z $output || -z $platform ]]; then
 	help
 elif [[ ! -d $input ]]; then
 	echo "$input is not a file."

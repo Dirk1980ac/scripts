@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Print a hopefully useful help text.
+help()
+{
+	cat << EOF
+Options:
+	-i                    Image (mandatory)
+    -t <type>             Image type (mandatory)
+    -h                    Show this help
+EOF
+	exit 1
+}
+
+# Check command line options
+while getopts "i:t:h" flag; do
+	case $flag in
+		t) type=$OPTARG ;;
+		i) image=$OPTARG ;;
+		h) help ;;
+		*)
+			echo 'Unknown option.'
+			exit 1
+			;;
+	esac
+done
+
+if [[ -z $image || -z $type ]]; then
+	help
+fi
+
+sudo podman run \
+	--rm \
+	-it \
+	--privileged \
+	--pull=newer \
+	--network host \
+	--security-opt label=type:unconfined_t \
+	-v ./config.toml:/config.toml:ro \
+	-v .:/output \
+	-v /var/lib/containers/storage:/var/lib/containers/storage \
+	quay.io/centos-bootc/bootc-image-builder:latest \
+	--type $type \
+	--rootfs ext4 \
+	--chown $UID:$GID \
+	$image
