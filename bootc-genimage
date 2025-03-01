@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Print a hopefully useful help text.
-help()
-{
+help() {
 	cat << EOF
 Options:
 	-i                    Image (mandatory)
-    -t <type>             Image type (mandatory)
+    -t <type>             Output type (raw, qcow2, anaconda-iso, ...) (mandatory)
     -h                    Show this help
+
 EOF
 	exit 1
 }
@@ -15,9 +15,9 @@ EOF
 # Check command line options
 while getopts "i:t:h" flag; do
 	case $flag in
-		t) type=$OPTARG ;;
-		i) image=$OPTARG ;;
-		h) help ;;
+		t) TYPE=$OPTARG ;; # Store the image type provided by the user.
+		i) IMAGE=$OPTARG ;; # Store the image path provided by the user.
+		h) help ;; # Call the help function to display usage information.
 		*)
 			echo 'Unknown option.'
 			exit 1
@@ -25,10 +25,15 @@ while getopts "i:t:h" flag; do
 	esac
 done
 
-if [[ -z $image || -z $type ]]; then
-	help
+if [[ -z $IMAGE || -z $TYPE ]]; then
+	help # If IMAGE or TYPE is not provided, show the help message and exit.
 fi
 
+# Pull the desired image if neccessary. - bootc-image-builder no longer does it.
+sudo podman pull $IMAGE
+
+# Run the containerized bootc-image-builder tool with specified options.
+# The resulting image file is chowned to the calling user.
 sudo podman run \
 	--rm \
 	-it \
@@ -40,7 +45,7 @@ sudo podman run \
 	-v .:/output \
 	-v /var/lib/containers/storage:/var/lib/containers/storage \
 	quay.io/centos-bootc/bootc-image-builder:latest \
-	--type $type \
+	--type $TYPE \
 	--rootfs ext4 \
 	--chown $UID:$GID \
-	$image
+	$IMAGE

@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Konfiguration (Pfade anpassen, falls nötig)
+EXE_FILE="$1"             # Pfad zur ausführbaren Windows-Datei
+DLL_DIR="dlls"                           # Zielverzeichnis für die DLLs
+# Standardpfad für MinGW unter Fedora (64-Bit)
+MSYS2_MINGW_BIN="/usr/x86_64-w64-mingw32/sys-root/mingw/bin"
+# Für 32-Bit-Anwendungen:
+# MSYS2_MINGW_BIN="/usr/i686-w64-mingw32/sys-root/mingw/bin"
+WINE_PREFIX="/Pfad/zu/deinem/.wine"       # Optional: Pfad zu deinem Wine-Prefix (falls nicht Standard)
+# Pfad zu Wine (falls nicht im PATH)
+WINE_BIN="/usr/bin/wine" # meist /usr/bin/wine
+
+# Überprüfungen und Vorbereitungen
+if [[ ! -f "$EXE_FILE" ]]; then
+  echo "FEHLER: EXE-Datei '$EXE_FILE' nicht gefunden."
+  exit 1
+fi
+
+if [[ ! -d "$MSYS2_MINGW_BIN" ]]; then
+  echo "FEHLER: MinGW bin-Verzeichnis '$MSYS2_MINGW_BIN' nicht gefunden. Ist MinGW installiert?"
+  echo "Für 64-Bit: sudo dnf install mingw64-winpthreads mingw64-gcc mingw64-binutils mingw64-crt"
+  echo "Für 32-Bit: sudo dnf install mingw32-winpthreads mingw32-gcc mingw32-binutils mingw32-crt"
+  exit 1
+fi
+
+if [[ ! -x "$WINE_BIN" ]]; then
+    echo "FEHLER: Wine ist nicht installiert. Bitte installieren Sie Wine: sudo dnf install wine"
+    exit 1
+fi
+
+mkdir -p "$DLL_DIR"
+
+# Liste der bereits kopierten DLLs
+copied_dlls=()
+
+# Funktion zum Kopieren einer DLL und ihrer Abhängigkeiten
+copy_dll() {
+  local dll="$1"
+
+  # Überprüfe, ob die DLL bereits kopiert wurde
+  for copied in "${copied_dlls[@]}"; do
+    if [[ "$copied" == "$dll" ]]; then
+      return
+    fi
+  done
+
+  # Kopiere die DLL
+  cp "$dll" "$DLL_DIR"
+  copied_dlls+=("$dll")
+
+    # Wine Prefix setzen, falls angegeben
+    if [[ -n "$WINE_PREFIX" ]]; then
+        export WINEPREFIX="$WINE_PREFIX"
+    fi
+
+  # Finde die Abhängigkeiten der DLL (mit Wine)
+  "$WINE_BIN" ldd "$dll" 2>/dev/null | grep -o '/[^ ]*\.dll' | while read dep; do
+    # Pfad zur DLL im MinGW-Verzeichnis suchen
+    dll_path=$(find "$MSYS2_MINGW_BIN" -name "$(basename "$dep")" 2>/dev/null)
+    if [[ -n "$dll_path" ]]; then
+        copy_dll "$dll_path"
+    else
+        echo "WARNUNG: Abhängigkeit '$dep' von '$dll' nicht gefunden. Manuelle Überprüfung erforderlich!"
+    fi
+  done
+}
+
+# Wine Prefix setzen, falls angegeben
+if [[ -n "$WINE_PREFIX" ]]; then
+    export WINEPREFIX="$WINE_PREFIX"
+fi
+
+# Finde die Abhängigkeiten der EXE (mit Wine)
+"$WINE_BIN" ldd "$EXE_FILE" 2>/dev/null | grep -o '/[^ ]*\.dll' | while read dep; do
+    # Pfad zur DLL im MinGW-Verzeichnis suchen
+    dll_path=$(find "$MSYS2_MINGW_BIN" -name "$(basename "$dep")" 2>/dev/null)
+    if [[ -n "$dll_path" ]]; then
+        copy_dll "$dll_path"
+    else
+        echo "WARNUNG: Abhängigkeit '$dep' von '$EXE_FILE' nicht gefunden. Manuelle Überprüfung erforderlich!"
+    fi
+done
+
+echo "DLLs wurden nach '$DLL_DIR' kopiert."

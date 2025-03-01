@@ -9,8 +9,7 @@
 # Copyright 2024 by Dirk Gottschalk
 
 # Print a hopefully useful help text.
-help()
-{
+help() {
 	cat << EOF
 Usage: rpm-crossbuild -i <directory> -o <directory>
 
@@ -18,14 +17,12 @@ Options:
     -i <directory>        Input directory (mandatory)
     -o <directory         Output directory (mandatory)
     -p <platform>         Target platform (e.g linux/arm64) (mandatory)
-    -h                    Show this help
 EOF
 	exit 1
 }
 
 if [ $# -lt 3 ]; then
 	help
-	exit 1
 fi
 
 # Check command line options

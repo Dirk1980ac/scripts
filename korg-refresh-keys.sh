@@ -7,7 +7,7 @@
 # script directly from the git repository.
 # exit 0
 
-# FIX ME: point at the actual location of pgpkeys.git clone
+# FIXME: point at the actual location of pgpkeys.git clone
 PGPKEYS="$HOME/.kernel-keys"
 
 # If you remove "--import-options merge-only", it will import keys

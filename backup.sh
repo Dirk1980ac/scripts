@@ -1,13 +1,17 @@
 #!/bin/sh
 
+# Check if a password argument was provided
 if [ $# -eq 0 ]; then
 	echo "Usage: backup.sh <password>"
 	exit 1
 fi
 
-# Export GPG passphrase
-SIGN_PASSPHRASE=$1 \
-	duplicity backup --verbosity=notice \
+# Export GPG passphrase for duplicity to use
+export SIGN_PASSPHRASE=$1
+
+# Run Duplicity with the specified options and parameters
+duplicity \
+	--verbosity=notice \
 	--full-if-older-than=3M \
 	--volsize=1024 \
 	--name act \
@@ -34,3 +38,6 @@ SIGN_PASSPHRASE=$1 \
 	--exclude '**' \
 	$HOME \
 	file:///net/lexington/dgottschalk/backup/reliant
+
+# Unset the GPG passphrase after the backup is complete
+unset  SIGN_PASSPHRASE
