@@ -3,20 +3,20 @@
 # SPDX-License-Identifier: GPL-2.0
 
 # Rebuild source RPM Packages for the specified platform using the
-# /dirk1980/rpm-crossbuild:latest Podman image.
+# docker.io/dirk1980/rpm-crossbuild:latest Podman image.
 # Actually supported by the image are linux/amd64 and linux/arm64.
 
 # Copyright 2024 by Dirk Gottschalk
 
 # Print a hopefully useful help text.
 help() {
-	cat << EOF
-Usage: rpm-crossbuild -i <directory> -o <directory>
+	cat <<EOF
+Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
 
 Options:
-    -i <directory>        Input directory (mandatory)
-    -o <directory         Output directory (mandatory)
+    -d <directory>        Working directory (mandatory)
     -p <platform>         Target platform (e.g linux/arm64) (mandatory)
+    -h                    Show this help
 EOF
 	exit 1
 }
@@ -27,41 +27,31 @@ fi
 
 # Check command line options
 while getopts "p:i:o:h" flag; do
-	case $flag in
-		i) input=$OPTARG ;;
-		o) output=$OPTARG ;;
-		p) platform=$OPTARG ;;
-		h) help ;;
-		*)
-			echo 'Unknown option.'
-			exit 1
-			;;
+	case "${flag}" in
+	d) data=${OPTARG} ;;
+	p) platform=${OPTARG} ;;
+	h) help ;;
+	*) echo 'Unknown option.' && exit 1 ;;
 	esac
 done
 
-# Show help if a mandatory option is missing
-if [[ -z $input || -z $output || -z $platform ]]; then
+if [[ -z $data || -z $platform ]]; then
 	help
-elif [[ ! -d $input ]]; then
-	echo "$input is not a file."
+elif [[ ! -d $data ]]; then
+	echo "$data is not a directory."
 	exit 1
-elif [[ ! -d $output ]]; then
-	mkdir $output
 fi
 
-# Check if given platform is supported
 if [[ $platform != "linux/arm64" && $platform != "linux/amd64" ]]; then
 	echo "Platform $platform is not supported."
 	exit 1
 fi
 
-# Run the contauiner and build the package
 podman run \
 	--rm \
 	-it \
 	--security-opt label=type:unconfined_t \
 	--pull=newer \
 	--platform $platform \
-	-v $input:/input:ro \
-	-v $output:/output \
+	-v $data:/datadir \
 	docker.io/dirk1980/rpm-crossbuild:latest
