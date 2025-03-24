@@ -10,7 +10,7 @@
 
 # Print a hopefully useful help text.
 help() {
-	cat <<EOF
+	cat << EOF
 Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
 
 Options:
@@ -26,12 +26,12 @@ if [ $# -lt 3 ]; then
 fi
 
 # Check command line options
-while getopts "p:i:o:h" flag; do
+while getopts "p:d:h" flag; do
 	case "${flag}" in
-	d) data=${OPTARG} ;;
-	p) platform=${OPTARG} ;;
-	h) help ;;
-	*) echo 'Unknown option.' && exit 1 ;;
+		d) data=${OPTARG} ;;
+		p) platform=${OPTARG} ;;
+		h) help ;;
+		*) echo 'Unknown option.' && exit 1 ;;
 	esac
 done
 
@@ -48,8 +48,9 @@ if [[ $platform != "linux/arm64" && $platform != "linux/amd64" ]]; then
 fi
 
 podman run \
+	--hostname $(hostname -f) \
 	--rm \
-	-it \
+	-t \
 	--security-opt label=type:unconfined_t \
 	--pull=newer \
 	--platform $platform \
