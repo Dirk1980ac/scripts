@@ -1,6 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-2.0-only
 
+set -eu
 echo "#!/bin/bash" > firewall-setup.sh
 firewall-cmd --get-zones | sed -E -e 's/[[:blank:]]+/\n/g' > zones.list
 
@@ -130,7 +131,4 @@ while read policies; do
 done < policies.list
 
 echo "firewall-cmd --reload" >> firewall-setup.sh
-
 rm -rf ./*.list
-chmod u+x firewall-setup.sh
-echo "Backup done!"
