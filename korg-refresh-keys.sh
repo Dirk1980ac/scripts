@@ -27,8 +27,8 @@ cd $PGPKEYS || exit 1
 git fetch $Q || exit 0
 
 if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
-	[[ -z $Q  ]] && echo "No changes since last run"
-	exit  0
+	[[ -z $Q ]] && echo "No changes since last run"
+	exit 0
 fi
 
 # Verify that the signature on the tip is both good and valid.
@@ -38,8 +38,8 @@ fi
 COUNT=$(git verify-commit --raw @{u} 2>&1 | grep -c -E '^\[GNUPG:\] (GOODSIG|VALIDSIG)')
 if [[ ${COUNT} -lt 2 ]]; then
 	# Hopefully, this never happens. :)
-	echo  "$0: FAILED TO VERIFY COMMIT SIGNATURE!"
-	exit  1
+	echo "$0: FAILED TO VERIFY COMMIT SIGNATURE!"
+	exit 1
 fi
 
 CHANGED=$(git diff --name-only HEAD @{u} | grep '.asc$')
@@ -52,12 +52,12 @@ git merge $Q @{u}
 IMPORTFILES=''
 for ASCFILE in $CHANGED; do
 	# It may have been a delete, so check if it's still there
-	[[ -f $ASCFILE  ]] && IMPORTFILES="$IMPORTFILES $ASCFILE"
+	[[ -f $ASCFILE ]] && IMPORTFILES="$IMPORTFILES $ASCFILE"
 done
 
 # This is a somewhat hacky but effective way to trim space
 IMPORTFILES=$(echo $IMPORTFILES | xargs)
 if [[ ! -z $IMPORTFILES ]]; then
-	[[ -z "$Q"  ]] && echo "Updating keyring"
-	$GPGBIN  $Q --import $IMPORTFLAGS $IMPORTFILES
+	[[ -z "$Q" ]] && echo "Updating keyring"
+	$GPGBIN $Q --import $IMPORTFLAGS $IMPORTFILES
 fi
