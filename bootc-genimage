@@ -2,81 +2,63 @@
 
 set -eo pipefail
 
-# Print a hopefully useful help text.
 help() {
-	cat << EOF
-
-USAGE: $(basename $0) [-a <TARGET_ARCH>] -i <IMAGE_NAME> -t <OUTPUT_TYPE>
-
-Options:
-	-a                    Image arch (amd64, arm64) for cross building
-	-i                    Image (mandatory)
-    -t <type>             Output type (raw, qcow2, anaconda-iso, ...) (mandatory)
-    -h                    Show this help
-
-EOF
+	echo "USAGE: $0 [-a <TARGET_ARCH>] -i <IMAGE_NAME> -t <OUTPUT_TYPE>"
 	exit 1
 }
 
-# Check command line options
-while getopts "a: i:t:h" flag; do
+[[ -z "$1" ]] && help
+
+while getopts "a:i:t:h" flag; do
 	case $flag in
-		a)
-			TARGET=$OPTARG
-			if [ "$TARGET" == "amd64" ]; then
-				platform="linux/amd64"
-			elif [ "$TARGET" == "arm64" ]; then
-				platform="linux/arm64"
-			fi
-			;;
-		t) TYPE=$OPTARG ;; # Store the image type provided by the user.
-		i) IMAGE=$OPTARG ;; # Store the image path provided by the user.
-		h) help ;; # Call the help function to display usage information.
+		a) TARGET=$OPTARG ;;
+		i) IMAGE=$OPTARG ;;
+		t) TYPE=$OPTARG ;;
+		h) help ;;
 		*) help ;;
 	esac
 done
 
-if [[ -z $IMAGE || -z $TYPE  ]]; then
+# Add input validation for required arguments
+[[ -z "$IMAGE" ]] && {
+	echo "Error: Image name is missing."
 	help
+	exit 1
+}
+
+[[ -z "$TYPE" ]] && {
+	echo "Error: Output type is missing."
+	help
+	exit 1
+}
+
+if [[ -n "$TARGET" ]]; then
+	case $TARGET in
+		amd64) platform="linux/amd64" ;;
+		arm64) platform="linux/arm64" ;;
+		*) {
+			echo "Error: Unsupported target architecture."
+			exit 1
+		} ;;
+	esac
 fi
 
-if [[ ! -z $TARGET && ! -z $platform ]]; then
-	sudo podman pull --platform $platform $IMAGE
-	sudo podman run \
-		--rm \
-		-it \
-		--platform $platform \
-		--privileged \
-		--pull=always \
-		--network host \
-		--security-opt label=type:unconfined_t \
-		-v ./config.toml:/config.toml:ro \
-		-v .:/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type $TYPE \
-		--target-arch $TARGET \
-		--rootfs ext4 \
-		--chown $UID:$GID \
-		$IMAGE
-else
-	sudo podman pull $IMAGE
-	sudo podman run \
-		--rm \
-		-it \
-		--privileged \
-		--pull=always \
-		--network host \
-		--security-opt label=type:unconfined_t \
-		-v ./config.toml:/config.toml:ro \
-		-v .:/output \
-		-v /var/lib/containers/storage:/var/lib/containers/storage \
-		quay.io/centos-bootc/bootc-image-builder:latest \
-		--type $TYPE \
-		--rootfs ext4 \
-		--chown $UID:$GID \
-		$IMAGE
-fi
+sudo podman pull ${platform:+--platform "$platform"} "$IMAGE"
 
-# Run the containerized bootc-image-builder tool with specified options.
-# The resulting image file is chowned to the calling user.
+sudo podman run \
+	--rm \
+	-it \
+	--privileged \
+	--pull=always \
+	--network host \
+	--security-opt label=type:unconfined_t \
+	${platform:+--platform "$platform"} \
+	-v ./config.toml:/config.toml:ro \
+	-v .:/output \
+	-v /var/lib/containers/storage:/var/lib/containers/storage \
+	quay.io/centos-bootc/bootc-image-builder:latest \
+	--type "$TYPE" \
+	${TARGET:+--target-arch "$TARGET"} \
+	--rootfs ext4 \
+	--chown "$UID:$GID" \
+	"$IMAGE"
