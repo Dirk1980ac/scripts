@@ -1,19 +1,24 @@
 #!/bin/bash
 
+#!/bin/bash
+
 set -eo pipefail
 
 help() {
-	echo "USAGE: $0 [-a <TARGET_ARCH>] -i <IMAGE_NAME> -t <OUTPUT_TYPE>"
+	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE> -i <IMAGE_NAME>] -t <OUTPUT_TYPE>..."
 	exit 1
 }
 
 [[ -z "$1" ]] && help
 
-while getopts "a:i:t:h" flag; do
+types=()
+
+while getopts "a:c:i:t:h" flag; do
 	case $flag in
 		a) TARGET=$OPTARG ;;
+		c) CONFIG=$OPTARG ;;
 		i) IMAGE=$OPTARG ;;
-		t) TYPE=$OPTARG ;;
+		t) types+=("$OPTARG") ;;
 		h) help ;;
 		*) help ;;
 	esac
@@ -26,39 +31,41 @@ done
 	exit 1
 }
 
-[[ -z "$TYPE" ]] && {
-	echo "Error: Output type is missing."
-	help
-	exit 1
-}
+sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 
-if [[ -n "$TARGET" ]]; then
-	case $TARGET in
-		amd64) platform="linux/amd64" ;;
-		arm64) platform="linux/arm64" ;;
-		*) {
-			echo "Error: Unsupported target architecture."
-			exit 1
-		} ;;
-	esac
+podman_run_args=(
+	--rm
+	-t
+	--privileged
+	--pull=newer
+	--network host
+	--security-opt label=type:unconfined_t
+)
+
+if [[ -n $CONFIG ]]; then
+	podman_run_args+=(
+		-v $CONFIG:/config.toml:ro
+	)
 fi
 
-sudo podman pull ${platform:+--platform "$platform"} "$IMAGE"
+podman_run_args+=(
+	-v .:/output
+	-v /var/lib/containers/storage:/var/lib/containers/storage
+	quay.io/centos-bootc/bootc-image-builder:latest
+)
 
-sudo podman run \
-	--rm \
-	-it \
-	--privileged \
-	--pull=always \
-	--network host \
-	--security-opt label=type:unconfined_t \
-	${platform:+--platform "$platform"} \
-	-v ./config.toml:/config.toml:ro \
-	-v .:/output \
-	-v /var/lib/containers/storage:/var/lib/containers/storage \
-	quay.io/centos-bootc/bootc-image-builder:latest \
-	--type "$TYPE" \
-	${TARGET:+--target-arch "$TARGET"} \
-	--rootfs ext4 \
-	--chown "$UID:$GID" \
+for type in "${types[@]}"; do
+	podman_run_args+=("--type" "$type")
+done
+
+if [[ -n "$TARGET" ]]; then
+	podman_run_args+=("--target-arch" "$TARGET")
+fi
+
+podman_run_args+=(
+	--rootfs ext4
+	--chown "$UID:$GID"
 	"$IMAGE"
+)
+
+sudo podman run ${podman_run_args[@]}
