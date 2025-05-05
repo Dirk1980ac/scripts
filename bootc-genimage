@@ -44,7 +44,7 @@ podman_run_args=(
 
 if [[ -n $CONFIG ]]; then
 	podman_run_args+=(
-		-v $CONFIG:/config.toml:ro
+		-v ./$CONFIG:/config.toml:ro
 	)
 fi
 
