@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Add additional SSH key to a FreeIPA user
+# NOTE: You have to add all existing keys when adding a key to a user via cli.
+#       This script simplifies the whole process of just adding a key
+if [[ $# -ne 2 ]]; then
+	echo "Usage: add-userkey <user> <key>"
+	exit 1
+fi
+
+user=$1
+keys=()
+
+while IFS= read -r key; do
+	if [[ -n "$key" ]]; then
+		keys+=(--sshpubkey=\"$key\")
+	fi
+done < <(sss_ssh_authorizedkeys "$user" | cut -d ' ' -f 2)
+
+keys+=(--sshpubkey=\"$2\")
+
+ipa user-mod $user ${keys[@]}
