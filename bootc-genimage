@@ -63,6 +63,7 @@ if [[ -n "$TARGET" ]]; then
 fi
 
 podman_run_args+=(
+	--use-librepo
 	--rootfs ext4
 	--chown "$UID:$GID"
 	"$IMAGE"
