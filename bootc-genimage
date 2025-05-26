@@ -5,7 +5,7 @@
 set -eo pipefail
 
 help() {
-	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE> -i <IMAGE_NAME>] -t <OUTPUT_TYPE>..."
+	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>} -i <IMAGE_NAME>] -t <OUTPUT_TYPE>"
 	exit 1
 }
 
@@ -13,13 +13,14 @@ help() {
 
 types=()
 
-while getopts "a:c:i:t:h" flag; do
+while getopts "a:c:i:r:t:h" flag; do
 	case $flag in
-		a) TARGET=$OPTARG ;;
-		c) CONFIG=$OPTARG ;;
-		i) IMAGE=$OPTARG ;;
+		a) TARGET="$OPTARG" ;;
+		c) CONFIG="$OPTARG" ;;
+		i) IMAGE="$OPTARG" ;;
 		t) types+=("$OPTARG") ;;
 		h) help ;;
+		r) FILESYS="$OPTARG" ;;
 		*) help ;;
 	esac
 done
@@ -35,9 +36,9 @@ sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 
 podman_run_args=(
 	--rm
-	-t
+	-it
 	--privileged
-	--pull=newer
+	--pull=always
 	--network host
 	--security-opt label=type:unconfined_t
 )
@@ -62,9 +63,14 @@ if [[ -n "$TARGET" ]]; then
 	podman_run_args+=("--target-arch" "$TARGET")
 fi
 
+if [[ -n "$FILESYS" ]]; then
+	podman_run_args+=(--rootfs "$FILESYS")
+else
+	podman_run_args+=(--rootfs ext4)
+fi
+
 podman_run_args+=(
-	--rootfs ext4
-	--chown "$UID:$GID"
+	--chown "$UID"
 	"$IMAGE"
 )
 

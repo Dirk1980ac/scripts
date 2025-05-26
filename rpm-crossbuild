@@ -9,50 +9,48 @@
 # Copyright 2024 by Dirk Gottschalk
 
 # Print a hopefully useful help text.
+
 help() {
-	cat << EOF
+	cat <<EOF
 Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
 
 Options:
     -d <directory>        Working directory (mandatory)
-    -p <platform>         Target platform (e.g linux/arm64) (mandatory)
+    -p <platform>         Target platform (if not host platform)
     -h                    Show this help
 EOF
 	exit 1
 }
 
-if [ $# -lt 3 ]; then
-	help
-fi
-
 # Check command line options
-while getopts "p:d:h" flag; do
+while getopts "p:i:o:h" flag; do
 	case "${flag}" in
-		d) data=${OPTARG} ;;
-		p) platform=${OPTARG} ;;
-		h) help ;;
-		*) echo 'Unknown option.' && exit 1 ;;
+	d) data=${OPTARG} ;;
+	p) platform=${OPTARG} ;;
+	h) help ;;
+	*) help ;;
 	esac
 done
 
-if [[ -z $data || -z $platform ]]; then
-	help
-elif [[ ! -d $data ]]; then
+if [[ ! -d $data ]]; then
 	echo "$data is not a directory."
 	exit 1
 fi
 
-if [[ $platform != "linux/arm64" && $platform != "linux/amd64" ]]; then
-	echo "Platform $platform is not supported."
-	exit 1
+args=(
+	--rm
+	-it
+	--security-opt label=type:unconfined_t
+	--pull=newer
+)
+
+if [[ -n "$platform" ]]; then
+	args+=("--platform" "$platform")
 fi
 
-podman run \
-	--hostname $(hostname -f) \
-	--rm \
-	-t \
-	--security-opt label=type:unconfined_t \
-	--pull=newer \
-	--platform $platform \
-	-v $data:/datadir \
+args+=(
+	-v $data:/datadir
 	docker.io/dirk1980/rpm-crossbuild:latest
+)
+
+podman run $args
