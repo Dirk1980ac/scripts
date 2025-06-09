@@ -1,23 +1,27 @@
 #!/bin/bash
 
-#!/bin/bash
+# This script can be used to create installer-images or disk images for bootc
+# containers. It mostly simplifies the podman command line needed for calling
+# bootc-image-builder.
 
 set -eo pipefail
 
 help() {
-	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>} -i <IMAGE_NAME>] -t <OUTPUT_TYPE>"
+	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>] [-t <OUTPUT_TYPE>] [ -i <IMAGE_NAME>]"
 	exit 1
 }
 
 [[ -z "$1" ]] && help
 
 types=()
+LOCAL=0
 
-while getopts "a:c:i:r:t:h" flag; do
+while getopts "a:c:i:lr:t:h" flag; do
 	case $flag in
 		a) TARGET="$OPTARG" ;;
 		c) CONFIG="$OPTARG" ;;
 		i) IMAGE="$OPTARG" ;;
+		l) LOCAL=1 ;;
 		t) types+=("$OPTARG") ;;
 		h) help ;;
 		r) FILESYS="$OPTARG" ;;
@@ -32,13 +36,17 @@ done
 	exit 1
 }
 
-sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
+# Only try to pull the image if it is not specified to be a local image.
+if [ $LOCAL -ne 1 ]; then
+	sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
+fi
 
+# Build the command line arguments from given script arguments
 podman_run_args=(
 	--rm
 	-it
 	--privileged
-	--pull=always
+	--pull=newer
 	--network host
 	--security-opt label=type:unconfined_t
 )
@@ -74,4 +82,5 @@ podman_run_args+=(
 	"$IMAGE"
 )
 
+# Run bib in pordman container
 sudo podman run ${podman_run_args[@]}

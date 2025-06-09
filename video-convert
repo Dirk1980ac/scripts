@@ -12,7 +12,7 @@ Options:
     -f <framerate>        Output frame rate (23, 30 or 40) (mandatory)
     -r <resolution>       Ourput resolution (480, 720 or 1080) (mandatory)
 EOF
-	exit 1
+	exit 0
 }
 
 # Check command line options
@@ -22,10 +22,7 @@ while getopts "r:f:i:h" flag; do
 		i) INPUT_FILE=$OPTARG ;;
 		f) FRAMERATE=$OPTARG ;;
 		h) help ;;
-		*)
-			echo 'Unknown option.'
-			exit 1
-			;;
+		*) help ;;
 	esac
 done
 
@@ -33,16 +30,16 @@ done
 case "$RESOLUTION" in
 	"1080" | "720" | "480") ;;
 	*)
-		echo   "Invalid resolution (1080/720/480 only)"
-		exit   1
+		echo "Invalid resolution (1080/720/480 only)"
+		exit 1
 		;;
 esac
 
 case "$FRAMERATE" in
 	"60" | "30" | "25") ;;
 	*)
-		echo   "Invalid framerate (30/60/25 only)"
-		exit   1
+		echo "Invalid framerate (30/60/25 only)"
+		exit 1
 		;;
 esac
 
@@ -54,17 +51,17 @@ OUTPUT_FILE=$(basename "$INPUT_FILE" | sed "s/\.$EXTENSION/ ${RESOLUTION}p${FRAM
 if [ -f "$INPUT_FILE" ] && ! [ -f "$OUTPUT_FILE" ]; then
 	if [ "$RESOLUTION" = "480" ]; then
 		ffmpeg -i "$INPUT_FILE" -vf scale=854:480 -c:v libx264 -r $FRAMERATE \
-			-crf      23 -preset veryfast -c:a copy "$OUTPUT_FILE"
+			-crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
 	else
 		ffmpeg -i "$INPUT_FILE" -vf scale=-1:$RESOLUTION -c:v libx264 -r \
-			$FRAMERATE      -crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
+			$FRAMERATE -crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
 	fi
 
 	# Check if conversion was successful and notify user
 	if [ $? -eq 0 ]; then
-		notify-send   "Video successfully converted: $OUTPUT_FILE"
+		notify-send "Video successfully converted: $OUTPUT_FILE"
 	else
-		notify-send   "Failed to convert video"
+		notify-send "Failed to convert video"
 		rm "$OUTPUT_FILE"
 	fi
 else
