@@ -14,18 +14,19 @@ help() {
 [[ -z "$1" ]] && help
 
 types=()
-LOCAL=0
 
-# set bootc-image-builder to use.
+# Set bootc-image-builder to use.
+# BIB="quay.io/centos-bootc/bootc-image-builder:latest"
+
+#
 BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
-
 
 while getopts "a:c:i:lr:t:h" flag; do
 	case $flag in
 		a) TARGET="$OPTARG" ;;
 		c) CONFIG="$OPTARG" ;;
 		i) IMAGE="$OPTARG" ;;
-		l) LOCAL=1 ;;
+		l) LOCAL="true" ;;
 		t) types+=("$OPTARG") ;;
 		h) help ;;
 		r) FILESYS="$OPTARG" ;;
@@ -41,7 +42,7 @@ done
 }
 
 # Only try to pull the image if it is not specified to be a local image.
-if [ $LOCAL -ne 1 ]; then
+if [ -z $LOCAL ]; then
 	sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 fi
 
@@ -82,7 +83,13 @@ else
 fi
 
 podman_run_args+=(
-	--chown "$UID"
+	--chown "$UID")
+
+if [ ! -z $LOCAL ]; then
+	podman_run_args+=(--local)
+fi
+
+podman_run_args+=(
 	"$IMAGE"
 )
 
