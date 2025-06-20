@@ -7,8 +7,9 @@
 set -eo pipefail
 
 help() {
-	echo "USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>] [-t <OUTPUT_TYPE>] [ -i <IMAGE_NAME>]"
-	exit 1
+	echo << END_OF_HELP
+	USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>] [-t <OUTPUT_TYPE>] [ -i <IMAGE_NAME>]
+END_OF_HELP
 }
 
 [[ -z "$1" ]] && help
@@ -16,19 +17,19 @@ help() {
 types=()
 
 # Set bootc-image-builder to use.
-# BIB="quay.io/centos-bootc/bootc-image-builder:latest"
+BIB="quay.io/centos-bootc/bootc-image-builder:latest"
 
-#
-BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
+# Use the version below to create images which boot on a Raspberry Pi 4B
+# until actual versions are fixed
+# BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
 
 while getopts "a:c:i:lr:t:h" flag; do
 	case $flag in
 		a) TARGET="$OPTARG" ;;
 		c) CONFIG="$OPTARG" ;;
 		i) IMAGE="$OPTARG" ;;
-		l) LOCAL="true" ;;
+		l) LOCAL=1 ;;
 		t) types+=("$OPTARG") ;;
-		h) help ;;
 		r) FILESYS="$OPTARG" ;;
 		*) help ;;
 	esac
@@ -42,7 +43,7 @@ done
 }
 
 # Only try to pull the image if it is not specified to be a local image.
-if [ -z $LOCAL ]; then
+if [  ${LOCAL} -ne 1 ]; then
 	sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 fi
 
@@ -85,7 +86,8 @@ fi
 podman_run_args+=(
 	--chown "$UID")
 
-if [ ! -z $LOCAL ]; then
+# Only necessary for older BIB versions like the one used for RPI 4 images for now.
+if [ $LOCAL -eq 1 ]; then
 	podman_run_args+=(--local)
 fi
 
