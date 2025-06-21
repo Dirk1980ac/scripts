@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# SPDX-License-Identifier: GPL-2.0
-
 # Rebuild source RPM Packages for the specified platform using the
 # docker.io/dirk1980/rpm-crossbuild:latest Podman image.
 # Actually supported by the image are linux/amd64 and linux/arm64.

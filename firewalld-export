@@ -1,5 +1,4 @@
 #!/bin/bash
-# SPDX-License-Identifier: GPL-2.0-only
 
 set -eu
 echo "#!/bin/bash" > firewall-setup.sh
