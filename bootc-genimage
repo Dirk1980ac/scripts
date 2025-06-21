@@ -1,18 +1,22 @@
 #!/bin/bash
 
 # This script can be used to create installer-images or disk images for bootc
-# containers. It mostly simplifies the podman command line needed for calling
-# bootc-image-builder.
+# containers. It is a wrapper around 'bootc-image-builder'.
+
+# NOTE: You need to have a working podman installation and sudo permissions on
+#       the build host since the build runs in a podman container.
 
 set -euo pipefail
 
 # Variables
 types=()
-
 LOCAL=0
 RASPI=0
 TARGET=""
 IMAGE=""
+CONFIG=""
+FILESYS=""
+OUTPUT_DIR=""
 
 help() {
 	echo "
@@ -39,6 +43,8 @@ Options:
   -p, --rpi                   Optimizes the image for Raspberry Pi 4B. This
                               sets the target architecture to 'arm64' and uses
                               a specific 'bootc-image-builder' version.
+  -o, --output <DIRECTORY>    Specify the output directory for the generated
+                              image. (Default: .)
   -h, --help                  Display this help message and exit.
 
 "
@@ -47,7 +53,7 @@ Options:
 # Set bootc-image-builder to use.
 BIB="quay.io/centos-bootc/bootc-image-builder:latest"
 
-OPTIONS=$(getopt -o a:c:i:lpr:t:h --long arch:,config:,image:,local,rpi,rootfs:,type:,help -n "$(basename "$0")" -- "$@")
+OPTIONS=$(getopt -o a:c:i:lpr:t:ho: --long arch:,config:,image:,local,rpi,rootfs:,type:,help,output: -n "$(basename "$0")" -- "$@")
 
 if [ $? -ne 0 ]; then
 	echo "Error: Invalid option provided to script." >&2
@@ -87,6 +93,10 @@ while true; do
 			FILESYS="$2"
 			shift 2
 			;;
+		-o | --output)
+			OUTPUT_DIR="$2"
+			shift 2
+			;;
 		-h | --help)
 			help
 			exit 0
@@ -116,7 +126,7 @@ if [[ -z "$IMAGE" ]]; then
 fi
 
 # Only try to pull the image if it is not specified to be a local image.
-if [ "${LOCAL}" -ne 1 ]; then
+if [ $LOCAL -ne 1 ]; then
 	sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 fi
 
@@ -136,8 +146,14 @@ if [[ -n "$CONFIG" ]]; then
 	)
 fi
 
+if [[ -n "$OUTPUT_DIR" ]]; then
+	podman_run_args+=(
+		-v "$OUTPUT_DIR":/output)
+else
+	podman_run_args+=(-v .:/output)
+fi
+
 podman_run_args+=(
-	-v .:/output
 	-v /var/lib/containers/storage:/var/lib/containers/storage
 	"${BIB}"
 )
@@ -156,8 +172,7 @@ else
 	podman_run_args+=(--rootfs ext4)
 fi
 
-podman_run_args+=(
-	--chown "$UID")
+podman_run_args+=(--chown "$UID")
 
 # Only necessary for older BIB versions like the one used for RPI 4 images for now.
 if [[ "$LOCAL" -eq 1 && "$RASPI" -eq 1 ]]; then
@@ -168,5 +183,5 @@ podman_run_args+=(
 	"$IMAGE"
 )
 
-# Run bib in podman container
+# Run bib in podman container with sudo
 sudo podman run "${podman_run_args[@]}"
