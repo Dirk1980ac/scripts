@@ -4,46 +4,119 @@
 # containers. It mostly simplifies the podman command line needed for calling
 # bootc-image-builder.
 
-set -eo pipefail
+set -euo pipefail
+
+# Variables
+types=()
+
+LOCAL=0
+RASPI=0
+TARGET=""
+IMAGE=""
 
 help() {
-	echo << END_OF_HELP
-	USAGE: $0 [-a <TARGET_ARCH>] [-c <CONFIG_FILE>] [-t <OUTPUT_TYPE>] [ -i <IMAGE_NAME>]
-END_OF_HELP
+	echo "
+Usage: $(basename "$0") [OPTIONS]
+
+This script simplifies the process of creating installer or disk images for
+bootc containers using 'bootc-image-builder'.
+
+Options:
+  -a, --arch <TARGET_ARCH>    Specify the target architecture for the image.
+                              Examples: x86_64, arm64. (Default: current system arch)
+  -c, --config <FILE>         Path to a custom TOML configuration file for
+                              bootc-image-builder. (e.g., config.toml)
+  -i, --image <IMAGE_NAME>    Mandatory: The name or reference of the bootc
+                              container image to use.
+                              Example: quay.io/centos-bootc/fedora-bootc:latest
+  -l, --local                 Use a local container image instead of pulling
+                              from a registry.
+  -t, --type <OUTPUT_TYPE>    Specify the desired output format for the image.
+                              Can be specified multiple times for multiple formats.
+                              Examples: ami, raw, qcow2, iso.
+  -r, --rootfs <FILESYSTEM>   Define the root filesystem type for the image.
+                              (Default: ext4)
+  -p, --rpi                   Optimizes the image for Raspberry Pi 4B. This
+                              sets the target architecture to 'arm64' and uses
+                              a specific 'bootc-image-builder' version.
+  -h, --help                  Display this help message and exit.
+
+"
 }
-
-[[ -z "$1" ]] && help
-
-types=()
 
 # Set bootc-image-builder to use.
 BIB="quay.io/centos-bootc/bootc-image-builder:latest"
 
-# Use the version below to create images which boot on a Raspberry Pi 4B
-# until actual versions are fixed
-# BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
+OPTIONS=$(getopt -o a:c:i:lpr:t:h --long arch:,config:,image:,local,rpi,rootfs:,type:,help -n "$(basename "$0")" -- "$@")
 
-while getopts "a:c:i:lr:t:h" flag; do
-	case $flag in
-		a) TARGET="$OPTARG" ;;
-		c) CONFIG="$OPTARG" ;;
-		i) IMAGE="$OPTARG" ;;
-		l) LOCAL=1 ;;
-		t) types+=("$OPTARG") ;;
-		r) FILESYS="$OPTARG" ;;
-		*) help ;;
+if [ $? -ne 0 ]; then
+	echo "Error: Invalid option provided to script." >&2
+	help
+	exit 1
+fi
+
+eval set -- "$OPTIONS"
+
+while true; do
+	case "$1" in
+		-a | --arch)
+			TARGET="$2"
+			shift 2
+			;;
+		-c | --config)
+			CONFIG="$2"
+			shift 2
+			;;
+		-i | --image)
+			IMAGE="$2"
+			shift 2
+			;;
+		-l | --local)
+			LOCAL=1
+			shift
+			;;
+		-p | --rpi)
+			RASPI=1
+			shift
+			;;
+		-t | --type)
+			types+=("$2")
+			shift 2
+			;;
+		-r | --rootfs)
+			FILESYS="$2"
+			shift 2
+			;;
+		-h | --help)
+			help
+			exit 0
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			help
+			exit 1
+			;;
 	esac
 done
 
-# Add input validation for required arguments
-[[ -z "$IMAGE" ]] && {
-	echo "Error: Image name is missing."
+# If RASPI flag was set, override BIB and ensure target arch is arm64
+if [ "$RASPI" -eq 1 ]; then
+	BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
+	TARGET="arm64" # Ensure it's arm64 if -p is used
+fi
+
+# Input validation for required arguments
+if [[ -z "$IMAGE" ]]; then
+	echo "Error: Image name is missing. Please specify a bootc container image using -i or --image." >&2
 	help
 	exit 1
-}
+fi
 
 # Only try to pull the image if it is not specified to be a local image.
-if [  ${LOCAL} -ne 1 ]; then
+if [ "${LOCAL}" -ne 1 ]; then
 	sudo podman pull ${TARGET:+--arch "$TARGET"} "$IMAGE"
 fi
 
@@ -57,16 +130,16 @@ podman_run_args=(
 	--security-opt label=type:unconfined_t
 )
 
-if [[ -n $CONFIG ]]; then
+if [[ -n "$CONFIG" ]]; then
 	podman_run_args+=(
-		-v ./$CONFIG:/config.toml:ro
+		-v ./"$CONFIG":/config.toml:ro
 	)
 fi
 
 podman_run_args+=(
 	-v .:/output
 	-v /var/lib/containers/storage:/var/lib/containers/storage
-	${BIB}
+	"${BIB}"
 )
 
 for type in "${types[@]}"; do
@@ -74,7 +147,7 @@ for type in "${types[@]}"; do
 done
 
 if [[ -n "$TARGET" ]]; then
-	podman_run_args+=("--target-arch" "$TARGET")
+	podman_run_args+=(--target-arch "$TARGET")
 fi
 
 if [[ -n "$FILESYS" ]]; then
@@ -87,7 +160,7 @@ podman_run_args+=(
 	--chown "$UID")
 
 # Only necessary for older BIB versions like the one used for RPI 4 images for now.
-if [ $LOCAL -eq 1 ]; then
+if [[ "$LOCAL" -eq 1 && "$RASPI" -eq 1 ]]; then
 	podman_run_args+=(--local)
 fi
 
@@ -95,5 +168,5 @@ podman_run_args+=(
 	"$IMAGE"
 )
 
-# Run bib in pordman container
-sudo podman run ${podman_run_args[@]}
+# Run bib in podman container
+sudo podman run "${podman_run_args[@]}"
