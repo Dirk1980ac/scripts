@@ -180,6 +180,7 @@ if [[ "$LOCAL" -eq 1 && "$RASPI" -eq 1 ]]; then
 fi
 
 podman_run_args+=(
+	--use-librepo
 	"$IMAGE"
 )
 

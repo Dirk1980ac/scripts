@@ -9,7 +9,7 @@
 # Print a hopefully useful help text.
 
 help() {
-	cat <<EOF
+	cat << EOF
 Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
 
 Options:
@@ -23,10 +23,10 @@ EOF
 # Check command line options
 while getopts "p:i:o:h" flag; do
 	case "${flag}" in
-	d) data=${OPTARG} ;;
-	p) platform=${OPTARG} ;;
-	h) help ;;
-	*) help ;;
+		d) data=${OPTARG} ;;
+		p) platform=${OPTARG} ;;
+		h) help ;;
+		*) help ;;
 	esac
 done
 
@@ -48,7 +48,7 @@ fi
 
 args+=(
 	-v $data:/datadir
-	docker.io/dirk1980/rpm-crossbuild:latest
+	docker.io/glockgmbh/rpm-crossbuild:latest
 )
 
-podman run $args
+podman run "${args[@]}"
