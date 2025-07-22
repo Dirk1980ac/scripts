@@ -4,7 +4,9 @@ This is my little script collection.
 Some are derived from scripts I found on the Internet and some others are
 completely self-made.  
   
-This Repository will grow over time. I'll add more scripts as soll as they get into my hands. I didn't collect all the scripts I wrote in a central point until now.
+This Repository will grow over time. I'll add more scripts as soll as they get
+into my hands.  
+I didn't collect all the scripts I wrote in a central point until now.
 
 ## The Scripts
 
@@ -12,7 +14,7 @@ This Repository will grow over time. I'll add more scripts as soll as they get i
 
 - firewalld-export: Export firewall rules to a file.
 
-- gen-ula: Generates a randol ULS for private IPv6 Networks.
+- gen-ula: Generates a random ULA for private IPv6 Networks.
 
 - media-convert: Convert media files into different formats.
 

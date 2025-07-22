@@ -53,9 +53,11 @@ Options:
 # Set bootc-image-builder to use.
 BIB="quay.io/centos-bootc/bootc-image-builder:latest"
 
-OPTIONS=$(getopt -o a:c:i:lpr:t:ho: --long arch:,config:,image:,local,rpi,rootfs:,type:,help,output: -n "$(basename "$0")" -- "$@")
-
-if [ $? -ne 0 ]; then
+if ! OPTIONS=$(
+	getopt -o a:c:i:lpr:t:ho: \
+		--long arch:,config:,image:,local,rpi,rootfs:,type:,help,output: \
+		-n "$(basename "$0")" -- "$@"
+); then
 	echo "Error: Invalid option provided to script." >&2
 	help
 	exit 1
@@ -111,12 +113,6 @@ while true; do
 			;;
 	esac
 done
-
-# If RASPI flag was set, override BIB and ensure target arch is arm64
-if [ "$RASPI" -eq 1 ]; then
-	BIB="quay.io/centos-bootc/bootc-image-builder:sha256-465c82cf63b450408fc61f3962fe76423b6c9a3c5bf84b55353605e3604f8c4d"
-	TARGET="arm64" # Ensure it's arm64 if -p is used
-fi
 
 # Input validation for required arguments
 if [[ -z "$IMAGE" ]]; then
