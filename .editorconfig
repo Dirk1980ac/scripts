@@ -3,7 +3,6 @@ root = true
 [*]
 indent_style = tab
 indent_size = 4
-shell_variant      = auto
 binary_next_line   = false
 switch_case_indent = true
 space_redirects    = true
@@ -14,7 +13,6 @@ trim_trailing_whitespace = true
 [[sh,bash,zsh]]
 indent_style = tab
 indent_size = 4
-shell_variant      = auto
 binary_next_line   = false
 switch_case_indent = true
 space_redirects    = true

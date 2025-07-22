@@ -25,18 +25,18 @@ done
 
 if  [ "$PREFIX_SIZE" -eq 48 ]; then
 	printf "fd%x:%x:%x::/48\n" \
-		"$(($RANDOM / 256))" \
+		"$(("$RANDOM" / 256))" \
 		"$RANDOM" \
 		"$RANDOM"
 elif  [ "$PREFIX_SIZE" -eq 56 ]; then
 	printf "fd%x:%x:%x:%x::/56\n" \
-		"$(($RANDOM / 256))" \
+		"$(("$RANDOM" / 256))" \
 		"$RANDOM" \
 		"$RANDOM" \
-		"$(($RANDOM / 256))"
+		"$(("$RANDOM" / 256))"
 else
 	printf "fd%x:%x:%x:%x::/64\n" \
-		"$(($RANDOM / 256))" \
+		"$(("$RANDOM" / 256))" \
 		"$RANDOM" \
 		"$RANDOM" \
 		"$RANDOM"

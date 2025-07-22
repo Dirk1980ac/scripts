@@ -19,7 +19,7 @@ while read zones; do
 
 	echo "- Rich Rules"
 	echo "# Adding rich rules for zone $zones" >> firewall-setup.sh
-	firewall-cmd --list-all --zone=$zones | grep 'rule ' |
+	firewall-cmd --list-all --zone="$zones" | grep 'rule ' |
 		sed -e 's/^[ \t]*//' > richrule.list
 	sed -i -e "s/$/'/" richrule.list
 	sed -i -e "s/^/'/" richrule.list
@@ -29,7 +29,7 @@ while read zones; do
 
 	echo "- Ports"
 	echo "# Adding ports for zone $zones" >> firewall-setup.sh
-	firewall-cmd --list-all --zone=$zones | grep ports | grep 'udp\|tcp' |
+	firewall-cmd --list-all --zone="$zones" | grep ports | grep 'udp\|tcp' |
 		awk -F"ports:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > ports.list
 	sed -i -e "s/^/firewall-cmd --permanent --zone=$zones --add-port=/" \
@@ -38,7 +38,7 @@ while read zones; do
 
 	echo "- Sources"
 	echo "# Adding sources for zone $zones" >> firewall-setup.sh
-	firewall-cmd --list-all --zone=$zones | grep sources |
+	firewall-cmd --list-all --zone="$zones" | grep sources |
 		awk -F"sources:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > sources.list
 	sed -i -e "s/^/firewall-cmd --permanent --zone=$zones --add-port=/" \
@@ -47,7 +47,7 @@ while read zones; do
 
 	echo "- Services"
 	echo "# Adding services for zone $zones" >> firewall-setup.sh
-	firewall-cmd --list-all --zone=$zones | grep services |
+	firewall-cmd --list-all --zone="$zones" | grep services |
 		awk -F"services:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > services.list
 	sed -i -e "s/^/firewall-cmd --permanent --zone=$zones --add-service=/" \
@@ -62,7 +62,7 @@ echo "Reading Policies..."
 echo ""
 firewall-cmd --get-policies | sed -E -e 's/[[:blank:]]+/\n/g' > policies.list
 
-while read policies; do
+while read -r policies; do
 	echo "Backing up policy $policies:"
 	echo "# Deleting existing policy $policies" >> firewall-setup.sh
 	echo "firewall-cmd --permanent --delete-policy=$policies" \
@@ -73,7 +73,7 @@ while read policies; do
 
 	echo "- Rich rules"
 	echo "# Adding rich rules for policy $policies" >> firewall-setup.sh
-	firewall-cmd --list-all --policy=$policies | grep 'rule ' |
+	firewall-cmd --list-all --policy="$policies" | grep 'rule ' |
 		sed -e 's/^[ \t]*//' > pol_richrule.list
 	sed -i -e "s/$/'/" pol_richrule.list
 	sed -i -e "s/^/'/" pol_richrule.list
@@ -84,7 +84,7 @@ while read policies; do
 
 	echo "- Ports"
 	echo "# Adding ports for policy $policies" >> firewall-setup.sh
-	firewall-cmd --list-all --policy=$policies | grep ports | grep 'udp\|tcp' |
+	firewall-cmd --list-all --policy="$policies" | grep ports | grep 'udp\|tcp' |
 		awk -F"ports:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > pol_ports.list
 	sed -i -e "s/^/firewall-cmd --permanent --policy=$policies --add-port=/" \
@@ -93,7 +93,7 @@ while read policies; do
 
 	echo "- Services"
 	echo "# Adding services for policy $policies" >> firewall-setup.sh
-	firewall-cmd --list-all --policy=$policies | grep services |
+	firewall-cmd --list-all --policy="$policies" | grep services |
 		awk -F"services:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > pol_services.list
 	sed -i -e \
@@ -103,7 +103,7 @@ while read policies; do
 
 	echo "- Ingress zones"
 	echo "# Setting ingress-zones for policy $policies" >> firewall-setup.sh
-	firewall-cmd --list-all --policy=$policies | grep ingress-zones |
+	firewall-cmd --list-all --policy="$policies" | grep ingress-zones |
 		awk -F"ingress-zones:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > pol_ingress.list
 	sed -i -e \
@@ -113,7 +113,7 @@ while read policies; do
 
 	echo "- Egress zones"
 	echo "# Setting egress-zones for policy $policies" >> firewall-setup.sh
-	firewall-cmd --list-all --policy=$policies | grep egress-zones |
+	firewall-cmd --list-all --policy="$policies" | grep egress-zones |
 		awk -F"egress-zones:" '{print$2}' | sed -E -e 's/[[:blank:]]+/\n/g' |
 		sed '/^$/d' > pol_egress.list
 	sed -i -e \
@@ -123,7 +123,7 @@ while read policies; do
 
 	echo "- Targets"
 	echo "# Setting target for policy $policies" >> firewall-setup.sh
-	TARGET=$(firewall-cmd --permanent --policy=$policies --get-target)
+	TARGET=$(firewall-cmd --permanent --policy="$policies" --get-target)
 	echo "firewall-cmd --permanent --policy=$policies --set-target=$TARGET" \
 		>> firewall-setup.sh
 	echo "" >> firewall-setup.sh

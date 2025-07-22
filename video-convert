@@ -50,11 +50,11 @@ OUTPUT_FILE=$(basename "$INPUT_FILE" | sed "s/\.$EXTENSION/ ${RESOLUTION}p${FRAM
 # Convert video using ffmpeg
 if [ -f "$INPUT_FILE" ] && ! [ -f "$OUTPUT_FILE" ]; then
 	if [ "$RESOLUTION" = "480" ]; then
-		ffmpeg -i "$INPUT_FILE" -vf scale=854:480 -c:v libx264 -r $FRAMERATE \
+		ffmpeg -i "$INPUT_FILE" -vf scale=854:480 -c:v libx264 -r "$FRAMERATE" \
 			-crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
 	else
-		ffmpeg -i "$INPUT_FILE" -vf scale=-1:$RESOLUTION -c:v libx264 -r \
-			$FRAMERATE -crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
+		ffmpeg -i "$INPUT_FILE" -vf scale=-1:"$RESOLUTION" -c:v libx264 -r \
+			"$FRAMERATE" -crf 23 -preset veryfast -c:a copy "$OUTPUT_FILE"
 	fi
 
 	# Check if conversion was successful and notify user

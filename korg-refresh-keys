@@ -21,10 +21,10 @@ GPGBIN="/usr/bin/gpg2 --batch"
 # Run with -q from cron to silence most output
 [[ $1 == '-q' ]] && Q='-q'
 
-cd $PGPKEYS || exit 1
+cd "$PGPKEYS" || exit 1
 # Exit if we can't run git fetch (perhaps not online?)
 [[ -z "$Q" ]] && echo "Updating the repository"
-git fetch $Q || exit 0
+git fetch "$Q" || exit 0
 
 if [[ $(git rev-parse HEAD) == $(git rev-parse @{u}) ]]; then
 	[[ -z $Q ]] && echo "No changes since last run"
@@ -47,7 +47,7 @@ CHANGED=$(git diff --name-only HEAD @{u} | grep '.asc$')
 # Don't use pull here in case upstream moved on since the fetch above. If this
 # happens CHANGED would likely be incomplete and you wouldn't have verified
 # HEAD but continue to import keymaterial from it.
-git merge $Q @{u}
+git merge "$Q" @{u}
 
 IMPORTFILES=''
 for ASCFILE in $CHANGED; do
@@ -56,8 +56,8 @@ for ASCFILE in $CHANGED; do
 done
 
 # This is a somewhat hacky but effective way to trim space
-IMPORTFILES=$(echo $IMPORTFILES | xargs)
+IMPORTFILES=$(echo "$IMPORTFILES" | xargs)
 if [[ ! -z $IMPORTFILES ]]; then
 	[[ -z "$Q" ]] && echo "Updating keyring"
-	$GPGBIN $Q --import $IMPORTFLAGS $IMPORTFILES
+	$GPGBIN "$Q" --import "$IMPORTFLAGS" "$IMPORTFILES"
 fi

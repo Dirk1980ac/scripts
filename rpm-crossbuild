@@ -21,7 +21,7 @@ EOF
 }
 
 # Check command line options
-while getopts "p:i:o:h" flag; do
+while getopts "p:i:od::h" flag; do
 	case "${flag}" in
 		d) data=${OPTARG} ;;
 		p) platform=${OPTARG} ;;
@@ -47,7 +47,7 @@ if [[ -n "$platform" ]]; then
 fi
 
 args+=(
-	-v $data:/datadir
+	-v "$data":/datadir
 	docker.io/glockgmbh/rpm-crossbuild:latest
 )
 
