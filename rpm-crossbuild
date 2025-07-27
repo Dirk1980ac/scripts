@@ -36,10 +36,10 @@ if [[ ! -d $data ]]; then
 fi
 
 args=(
-	--rm
-	-it
 	--security-opt label=type:unconfined_t
 	--pull=newer
+	--rm
+	-t
 )
 
 if [[ -n "$platform" ]]; then
