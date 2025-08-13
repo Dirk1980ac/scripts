@@ -4,27 +4,32 @@
 # docker.io/dirk1980/rpm-crossbuild:latest Podman image.
 # Actually supported by the image are linux/amd64 and linux/arm64.
 
-# Copyright 2024 by Dirk Gottschalk
+# Copyright 2025 by Dirk Gottschalk
 
 # Print a hopefully useful help text.
-
 help() {
 	cat << EOF
 Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
 
 Options:
     -d <directory>        Working directory (mandatory)
-    -p <platform>         Target platform (if not host platform)
     -h                    Show this help
 EOF
 	exit 1
 }
 
+IMAGE="docker.io/dirk1980/rpm-crossbuild"
+
+PLATFORMS=(
+	"linux/amd64"
+	"linux/arm64"
+	"linux/riscv64"
+)
+
 # Check command line options
-while getopts "p:i:od::h" flag; do
+while getopts ":i:od::h" flag; do
 	case "${flag}" in
 		d) data=${OPTARG} ;;
-		p) platform=${OPTARG} ;;
 		h) help ;;
 		*) help ;;
 	esac
@@ -35,20 +40,12 @@ if [[ ! -d $data ]]; then
 	exit 1
 fi
 
-args=(
-	--security-opt label=type:unconfined_t
-	--pull=newer
-	--rm
-	-t
-)
-
-if [[ -n "$platform" ]]; then
-	args+=("--platform" "$platform")
-fi
-
-args+=(
-	-v "$data":/datadir
-	docker.io/glockgmbh/rpm-crossbuild:latest
-)
-
-podman run "${args[@]}"
+for platform in "${PLATFORMS[@]}"; do
+	podman run --security-opt label=type:unconfined_t \
+		--platform $platform \
+		--pull=newer \
+		--rm \
+		-t \
+		-v "$data":/datadir \
+		"$IMAGE"
+done

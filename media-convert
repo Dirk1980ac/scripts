@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Specify source file extension to convert (e.g., mp3)
 source_extension="$1"
@@ -16,9 +16,9 @@ IFS=$'\n'
 # Disable globbing to prevent unexpected behavior with find
 set -f
 
-# Loop through all files with the specified source extension in the current
+# Loop through all files with the specified source tn the current
 # directory and subdirectories
-for source_file in $(find . -iname "*.$source_extension"); do
+for source_file in *."$(find . -iname "*.$source_extension")"; do
 	# Create the target file name by replacing the source extension with the
 	# target extension
 	target_file="${source_file%.*}.$target_extension"
