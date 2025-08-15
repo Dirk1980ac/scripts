@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Specify source file extension to convert (e.g., mp3)
 source_extension="$1"

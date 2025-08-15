@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 # 1) Clean Keys
 echo "Clean Keys:"
 for keyid in $(gpg -k --with-colons | grep ^pub | cut -d':' -f5); do

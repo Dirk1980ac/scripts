@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # This script generates a random IPv6 ULA address.
 help() {

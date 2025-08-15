@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Rebuild source RPM Packages for the specified platform using the
 # docker.io/dirk1980/rpm-crossbuild:latest Podman image.

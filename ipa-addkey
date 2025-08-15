@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Add additional SSH key to a FreeIPA user
 # NOTE: You have to add all existing keys when adding a key to a user via cli.

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Define input file and parameters
 FRAMERATE=${3:-"30"}     # Set default framerate to 30 if not provided

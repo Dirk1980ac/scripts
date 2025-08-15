@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Check if a password argument was provided
 if [ $# -eq 0 ]; then

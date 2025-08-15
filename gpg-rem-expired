@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # Expired GPG keys
 expired_keys="$(gpg2 --list-keys --fixed-list-mode --with-colons |

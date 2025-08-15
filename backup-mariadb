@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 # Check if exactly two arguments are provided (user and password)
 if [[ $# -ne 2 ]]; then
 	echo "Usage: backup-mariadb.sh <user> <password>"

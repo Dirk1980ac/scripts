@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 set -eu
 echo "#!/bin/bash" > firewall-setup.sh
@@ -11,14 +11,15 @@ echo ""
 
 while read zones; do
 	echo "Backing up zone $zones:"
-	echo "# Deleting existing zone $zones" >> firewall-setup.sh
-	echo "firewall-cmd --permanent --delete-zone=$zones" >> firewall-setup.sh
+	{
+		echo "# Deleting existing zone $zones"
+		echo "firewall-cmd --permanent --delete-zone=$zones"
+		echo "# Creating new zone $zones"
+		echo "firewall-cmd --permanent --new-zone=$zones"
+		echo "- Rich Rules"
+		echo "# Adding rich rules for zone $zones"
+	} >> firewall-setup.sh
 
-	echo "# Creating new zone $zones" >> firewall-setup.sh
-	echo "firewall-cmd --permanent --new-zone=$zones" >> firewall-setup.sh
-
-	echo "- Rich Rules"
-	echo "# Adding rich rules for zone $zones" >> firewall-setup.sh
 	firewall-cmd --list-all --zone="$zones" | grep 'rule ' |
 		sed -e 's/^[ \t]*//' > richrule.list
 	sed -i -e "s/$/'/" richrule.list
@@ -64,12 +65,13 @@ firewall-cmd --get-policies | sed -E -e 's/[[:blank:]]+/\n/g' > policies.list
 
 while read -r policies; do
 	echo "Backing up policy $policies:"
-	echo "# Deleting existing policy $policies" >> firewall-setup.sh
-	echo "firewall-cmd --permanent --delete-policy=$policies" \
-		>> firewall-setup.sh
+	{
+		echo "# Deleting existing policy $policies"
+		echo "firewall-cmd --permanent --delete-policy=$policies"
 
-	echo "# Creating new policy $policies" >> firewall-setup.sh
-	echo "firewall-cmd --permanent --new-policy=$policies" >> firewall-setup.sh
+		echo "# Creating new policy $policies"
+		echo "firewall-cmd --permanent --new-policy=$policies"
+	} >> firewall-setup.sh
 
 	echo "- Rich rules"
 	echo "# Adding rich rules for policy $policies" >> firewall-setup.sh

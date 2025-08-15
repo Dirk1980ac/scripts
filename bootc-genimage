@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 
 # This script can be used to create installer-images or disk images for bootc
 # containers. It is a wrapper around 'bootc-image-builder'.

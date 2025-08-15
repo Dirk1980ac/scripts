@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/env bash
 # This script is for refreshing your keyring on a regular
 # basis. It can be run from cron or manually. See README.rst
 # for details on how to set it up.
