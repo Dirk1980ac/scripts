@@ -1,0 +1,38 @@
+#!/bin/env bash
+
+# Specify source file extension to convert (e.g., mp3)
+source_extension="$1"
+
+# Specify target file extension for conversion (e.g., wav)
+target_extension="$2"
+
+# Set a flag to delete the original source file after conversion
+# (optional: "delete")
+delete_source_file="$3"
+
+# Set IFS to a newline character for easier file iteration
+IFS=$'\n'
+
+# Disable globbing to prevent unexpected behavior with find
+set -f
+
+# Loop through all files with the specified source tn the current
+# directory and subdirectories
+for source_file in *."$(find . -iname "*.${source_extension}")"; do
+	# Create the target file name by replacing the source extension with the
+	# target extension
+	target_file="${source_file%.*}.${target_extension}"
+
+	# Use FFmpeg to convert the source file to the target format, using hardware
+	# acceleration (vaapi) and overwrite output if it already exists
+	ffmpeg -y -hwaccel vaapi -i "${source_file}" "${target_file}"
+
+	# If deletion of original source files is enabled, remove the source file
+	# after conversion
+	if [[ ${delete_source_file} == "delete" ]] && [[ -f ${target_file}  ]]; then
+		rm "${source_file}"
+	fi
+done
+
+# Enable globbing again to restore default behavior
+set +f

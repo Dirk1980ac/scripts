@@ -1,0 +1,70 @@
+#!/bin/env bash
+
+# Define input file and parameters
+FRAMERATE=${3:-"30"}     # Set default framerate to 30 if not provided
+
+help() {
+	cat << EOF
+Usage: rpm-crossbuild -i <directory> -o <directory>
+
+Options:
+    -i <file>             Input file (mandatory)
+    -f <framerate>        Output frame rate (23, 30 or 40) (mandatory)
+    -r <resolution>       Ourput resolution (480, 720 or 1080) (mandatory)
+EOF
+	exit 0
+}
+
+# Check command line options
+while getopts "r:f:i:h" flag; do
+	case ${flag} in
+		r) RESOLUTION=${OPTARG} ;;
+		i) INPUT_FILE=${OPTARG} ;;
+		f) FRAMERATE=${OPTARG} ;;
+		h) help ;;
+		*) help ;;
+	esac
+done
+
+# Validate input parameters
+case "${RESOLUTION}" in
+	"1080" | "720" | "480") ;;
+	*)
+		echo "Invalid resolution (1080/720/480 only)"
+		exit 1
+		;;
+esac
+
+case "${FRAMERATE}" in
+	"60" | "30" | "25") ;;
+	*)
+		echo "Invalid framerate (30/60/25 only)"
+		exit 1
+		;;
+esac
+
+# Extract file extension and create output filename
+EXTENSION="${INPUT_FILE##*.}"
+OUTPUT_FILE=$(basename "${INPUT_FILE}" | sed "s/\.${EXTENSION}/ ${RESOLUTION}p${FRAMERATE}.${EXTENSION}/")
+
+# Convert video using ffmpeg
+if [[ -f "${INPUT_FILE}" ]] && ! [[ -f "${OUTPUT_FILE}" ]]; then
+	if [[ "${RESOLUTION}" = "480" ]]; then
+		ffmpeg -i "${INPUT_FILE}" -vf scale=854:480 -c:v libx264 -r "${FRAMERATE}" \
+			-crf 23 -preset veryfast -c:a copy "${OUTPUT_FILE}"
+	else
+		ffmpeg -i "${INPUT_FILE}" -vf scale=-1:"${RESOLUTION}" -c:v libx264 -r \
+			"${FRAMERATE}" -crf 23 -preset veryfast -c:a copy "${OUTPUT_FILE}"
+	fi
+
+	# Check if conversion was successful and notify user
+	# shellcheck disable=SC2181
+	if [[ $? -eq 0 ]]; then
+		notify-send "Video successfully converted: ${OUTPUT_FILE}"
+	else
+		notify-send "Failed to convert video"
+		rm "${OUTPUT_FILE}"
+	fi
+else
+	notify-send "Error: Video already converted?"
+fi

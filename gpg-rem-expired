@@ -1,0 +1,10 @@
+#!/bin/env bash
+
+# Expired GPG keys
+expired_keys="$(gpg2 --list-keys --fixed-list-mode --with-colons |
+	grep "^pub:e:" | cut -f5 -d":" || true)"
+
+for key in ${expired_keys}; do
+	gpg2 --batch --no-greeting --delete-key "${key}" &&
+		echo "Key ${key} deleted successfully."
+done

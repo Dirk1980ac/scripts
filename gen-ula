@@ -1,0 +1,43 @@
+#!/bin/env bash
+
+# This script generates a random IPv6 ULA address.
+help() {
+	cat << EOHELP
+Usage: gen-ula.sh [-s <Prefix_Size>]
+
+Default prefix size is 64 bits.
+Valid values are 48, 56 and 64.
+EOHELP
+}
+
+PREFIX_SIZE=64
+
+# Check command line options
+while getopts "s:h" flag; do
+	case ${flag} in
+		s) PREFIX_SIZE=${OPTARG} ;;
+		h) help ;;
+		*)
+			help
+			;;
+	esac
+done
+
+if  [[ "${PREFIX_SIZE}" -eq 48 ]]; then
+	printf "fd%x:%x:%x::/48\n" \
+		"$(("${RANDOM}" / 256))" \
+		"${RANDOM}" \
+		"${RANDOM}"
+elif  [[ "${PREFIX_SIZE}" -eq 56 ]]; then
+	printf "fd%x:%x:%x:%x::/56\n" \
+		"$(("${RANDOM}" / 256))" \
+		"${RANDOM}" \
+		"${RANDOM}" \
+		"$(("${RANDOM}" / 256))"
+else
+	printf "fd%x:%x:%x:%x::/64\n" \
+		"$(("${RANDOM}" / 256))" \
+		"${RANDOM}" \
+		"${RANDOM}" \
+		"${RANDOM}"
+fi

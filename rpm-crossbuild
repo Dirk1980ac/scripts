@@ -1,0 +1,48 @@
+#!/bin/env bash
+
+# Rebuild source RPM Packages for the specified platform using the
+# docker.io/dirk1980/rpm-crossbuild:latest Podman image.
+# Actually supported by the image are linux/amd64 and linux/arm64.
+
+# Copyright 2025 by Dirk Gottschalk
+
+# Print a hopefully useful help text.
+help() {
+	cat << EOF
+Usage: rpm-crossbuild -i <directory> -o <directory> -p <platform>
+
+Options:
+    -d <directory>        Working directory (mandatory)
+    -h                    Show this help
+EOF
+	exit 1
+}
+
+IMAGE="docker.io/dirk1980/rpm-crossbuild"
+
+ARCHES=()
+
+# Check command line options
+while getopts "a:d:h" flag; do
+	case "${flag}" in
+		a) ARCHES+=("${OPTARG}");;
+		d) data=${OPTARG} ;;
+		h) help ;;
+		*) help ;;
+	esac
+done
+
+if [[ ! -d ${data} ]]; then
+	echo "${data} is not a directory."
+	exit 1
+fi
+
+for arch in "${ARCHES[@]}"; do
+	podman run \
+		--rm \
+		--security-opt label=type:unconfined_t \
+		--arch "${arch}" \
+		--pull=newer \
+		-v "${data}":/datadir \
+		-t "${IMAGE}"
+done
