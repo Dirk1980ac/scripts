@@ -35,6 +35,7 @@ duplicity \
 	--include "${HOME}"/scripts \
 	--include "${HOME}"/rpmbuild/SPECS \
 	--include "${HOME}"/rpmbuild/SOURCES \
+	--include "${HOME}"/.radicle \
 	--exclude '**' \
 	"${HOME}" \
 	file:///net/lexington/dgottschalk/backup/reliant
